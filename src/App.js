@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router';
 import { publicRoutes } from '~/routes';
 import { DefaultLayout } from '~/components/Layout';
 import { Fragment } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
             );
           })}
         </Routes>
+        <Analytics />
+        <SpeedInsights />
       </div>
     </Router>
   );
