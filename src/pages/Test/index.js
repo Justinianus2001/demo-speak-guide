@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMicrophone, faStop, faPlay, faPause, faUpload, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import coach from '~/images/coach.png';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -108,6 +110,19 @@ function Test() {
         localStorage.setItem(`metricsResponse_${newKey}`, JSON.stringify(metricsResponse));
 
         localStorage.setItem('currentKey', newKey);
+
+        let listScore = localStorage.getItem('listScore');
+
+        if (!listScore) {
+          listScore = [];
+        } else {
+          listScore = JSON.parse(listScore);
+        }
+
+        const scores = Object.values(metricsResponse.data.measures).map((measure) => measure.score);
+        listScore.push(...scores);
+
+        localStorage.setItem('listScore', JSON.stringify(listScore));
       } catch (error) {
         console.error('Error analyzing and evaluating:', error);
       }
@@ -130,7 +145,7 @@ function Test() {
       }
     }
 
-    if (pronunciationData.length > 4 && metricsData.length > 4) {
+    if (localStorage.getItem('currentKey') >= 5) {
       const combinedData = {
         pronunciationData,
         metricsData,
@@ -188,9 +203,9 @@ function Test() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-900 to-purple-900 text-white py-12 flex flex-col justify-center items-center">
+    <div className="bg-gradient-to-b from-blue-900 to-purple-900 text-white py-12 flex flex-col items-center min-h-screen">
       <div className="text-center">
-        <h1 className="text-xl font-semibold">Demo Pronunciation Practice Website</h1>
+        <h1 className="text-xl font-semibold">Demo Pronunciation Practice</h1>
       </div>
       <div className="mt-8">
         <img
@@ -218,49 +233,59 @@ function Test() {
           )}
         </b>
       </div>
-      <div className="mt-8">
+      <div className="mt-8 flex">
         <button
           onClick={handleNewText}
-          className="bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-semibold py-2 px-12 rounded-full text-lg"
+          className="bg-gradient-to-r from-purple-400 to-indigo-500 text-white font-semibold w-12 h-12 rounded-full text-lg flex items-center justify-center"
         >
-          Change Text
+          <FontAwesomeIcon icon={faSyncAlt} />
         </button>
-      </div>
-      <div className="mt-8">
+        <input type="file" accept="audio/*" onChange={handleFileUpload} id="file-upload" className="hidden" />
+        <label
+          htmlFor="file-upload"
+          className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold w-12 h-12 mx-3 rounded-full text-lg flex items-center justify-center cursor-pointer"
+        >
+          <FontAwesomeIcon icon={faUpload} />
+        </label>
         <button
           onClick={handleRecord}
-          className="bg-gradient-to-r from-red-400 to-pink-500 text-white font-semibold py-2 px-12 mx-2 rounded-full text-lg"
+          className="bg-gradient-to-r from-red-400 to-pink-500 text-white font-semibold w-12 h-12 rounded-full text-lg"
         >
-          {isRecording ? 'Stop Recording' : 'Record'}
+          <FontAwesomeIcon icon={isRecording ? faStop : faMicrophone} />
         </button>
-        <input
-          type="file"
-          accept="audio/*"
-          onChange={handleFileUpload}
-          className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold py-2 px-12 mx-2 rounded-full text-lg"
-        />
         <button
           onClick={!isPlaying ? handleReplay : handleStopReplay}
-          className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold py-2 px-12 mx-2 rounded-full text-lg"
+          className={`bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold w-12 h-12 mx-3 rounded-full text-lg ${
+            !audioFile ? 'disabled' : ''
+          }`}
           disabled={!audioFile}
         >
-          {!isPlaying ? `Replay` : `Stop`}
+          <FontAwesomeIcon icon={!isPlaying ? faPlay : faPause} />
         </button>
       </div>
       <div className="mt-8">
         <button
           onClick={handleAnalyzeAndEvaluate}
-          className="bg-gradient-to-r from-blue-400 to-green-500 text-white font-semibold py-2 px-12 rounded-full text-lg"
+          className={`bg-gradient-to-r from-blue-400 to-green-500 text-white font-semibold py-2 px-12 rounded-full text-lg ${
+            !audioFile ? 'disabled' : ''
+          }`}
           disabled={!audioFile}
         >
           Analyze and Evaluate
         </button>
       </div>
-      <div className="mt-8">
+      <div className="mt-4">
+        <p className="text-lg font-semibold text-center">
+          You have completed ({Math.min(localStorage.getItem('currentKey') || 0, 5)}/5) tests to generate report.
+        </p>
+      </div>
+      <div className="mt-4">
         <button
           onClick={handleGenerateReport}
-          className="bg-gradient-to-r from-gray-400 to-gray-500 text-white font-semibold py-2 px-12 rounded-full text-lg"
-          disabled={localStorage.length < 10}
+          className={`bg-gradient-to-r from-gray-400 to-gray-500 text-white font-semibold py-2 px-12 rounded-full text-lg ${
+            localStorage.getItem('currentKey') < 5 ? 'disabled' : ''
+          }`}
+          disabled={localStorage.getItem('currentKey') < 5}
         >
           Generate Speaking Report
         </button>

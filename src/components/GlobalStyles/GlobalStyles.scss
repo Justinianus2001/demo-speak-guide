@@ -15,13 +15,16 @@
   box-sizing: border-box;
 }
 
-html {
-  // font-size: 62.5%;
-}
-
 body {
   font-family: 'IBM Plex Sans', san-serif;
-  // font-size: 1.6rem;
-  // line-height: 1.5;
   text-rendering: optimizeSpeed;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.min-h-screen {
+  min-height: 100vh; /* Set this to a value greater than 100vh to make the background longer than the screen height */
 }
