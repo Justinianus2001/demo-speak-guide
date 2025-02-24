@@ -282,7 +282,7 @@ function Test() {
       <div className="mt-4">
         <button
           onClick={handleGenerateReport}
-          className={`bg-gradient-to-r from-gray-400 to-gray-500 text-white font-semibold py-2 px-12 rounded-full text-lg ${
+          className={`bg-gradient-to-r from-red-400 to-orange-500 text-white font-semibold py-2 px-12 rounded-full text-lg ${
             localStorage.getItem('currentKey') < 5 ? 'disabled' : ''
           }`}
           disabled={localStorage.getItem('currentKey') < 5}
@@ -347,20 +347,36 @@ function Test() {
       )}
       {reportResponse && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold">Speaking Report:</h2>
+          <p className="text-lg font-semibold text-center my-1">Your average point:</p>
+          <h1 className="text-4xl font-semibold text-center my-1">
+            <strong>
+              {localStorage.getItem('listScore')
+                ? Math.round(
+                    (JSON.parse(localStorage.getItem('listScore')).reduce((a, b) => a + b, 0) /
+                      JSON.parse(localStorage.getItem('listScore')).length) *
+                      100,
+                  ) / 100
+                : 0}
+            </strong>
+          </h1>
+          <h2 className="text-lg font-semibold my-1">Speaking Report:</h2>
           <p>
             <strong>Overall Assessment:</strong> {reportResponse.data.overall_assessment}
           </p>
-          <h3 className="text-md font-semibold">Common Errors:</h3>
+          <h3 className="text-md font-semibold my-1">Common Errors:</h3>
           <ul>
             {reportResponse.data.common_errors.map((error, index) => (
-              <li key={index}>{error}</li>
+              <li key={index} className="my-1">
+                {error}
+              </li>
             ))}
           </ul>
-          <h3 className="text-md font-semibold">Improvement Suggestions:</h3>
+          <h3 className="text-md font-semibold my-1">Improvement Suggestions:</h3>
           <ul>
             {reportResponse.data.improvement_suggestions.map((suggestion, index) => (
-              <li key={index}>{suggestion}</li>
+              <li key={index} className="my-1">
+                {suggestion}
+              </li>
             ))}
           </ul>
         </div>
