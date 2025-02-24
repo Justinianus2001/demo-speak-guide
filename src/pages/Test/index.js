@@ -263,6 +263,12 @@ function Test() {
           <FontAwesomeIcon icon={!isPlaying ? faPlay : faPause} />
         </button>
       </div>
+      <div className="mt-4 flex">
+        <p className="w-12 break-words text-sm text-center">New Text</p>
+        <p className="w-12 break-words text-sm text-center mx-3">Upload Audio</p>
+        <p className="w-12 break-words text-sm text-center">{isRecording ? 'Stop' : 'Record'}</p>
+        <p className="w-12 break-words text-sm text-center mx-3">{!isPlaying ? 'Play Audio' : 'Pause Audio'}</p>
+      </div>
       <div className="mt-8">
         <button
           onClick={handleAnalyzeAndEvaluate}
