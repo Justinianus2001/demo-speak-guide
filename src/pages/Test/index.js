@@ -1,5 +1,13 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMicrophone, faStop, faPlay, faPause, faUpload, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+  faMicrophone,
+  faStop,
+  faPlay,
+  faPause,
+  faUpload,
+  faSyncAlt,
+  faSpinner,
+} from '@fortawesome/free-solid-svg-icons';
 import coach from '~/images/coach.png';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -12,6 +20,8 @@ function Test() {
   const [reportResponse, setReportResponse] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [isLoadingAnalyze, setIsLoadingAnalyze] = useState(false);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioRef = useRef(null);
@@ -78,6 +88,7 @@ function Test() {
 
   const handleAnalyzeAndEvaluate = async () => {
     if (audioFile) {
+      setIsLoadingAnalyze(true);
       const formData = new FormData();
       formData.append('text', currentText);
       formData.append('audio', audioFile);
@@ -125,6 +136,8 @@ function Test() {
         localStorage.setItem('listScore', JSON.stringify(listScore));
       } catch (error) {
         console.error('Error analyzing and evaluating:', error);
+      } finally {
+        setIsLoadingAnalyze(false);
       }
     }
   };
@@ -146,6 +159,7 @@ function Test() {
     }
 
     if (localStorage.getItem('currentKey') >= 5) {
+      setIsLoadingReport(true);
       const combinedData = {
         pronunciationData,
         metricsData,
@@ -154,13 +168,19 @@ function Test() {
       const formData = new FormData();
       formData.append('text', JSON.stringify(combinedData));
 
-      const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
+          method: 'POST',
+          body: formData,
+        });
 
-      const data = await response.json();
-      setReportResponse(data);
+        const data = await response.json();
+        setReportResponse(data);
+      } catch (error) {
+        console.error('Error generating report:', error);
+      } finally {
+        setIsLoadingReport(false);
+      }
     }
   };
 
@@ -278,6 +298,7 @@ function Test() {
           disabled={!audioFile}
         >
           Analyze and Evaluate
+          {isLoadingAnalyze ? <FontAwesomeIcon icon={faSpinner} spin className="mx-2" /> : <></>}
         </button>
       </div>
       <div className="mt-4">
@@ -294,6 +315,7 @@ function Test() {
           disabled={localStorage.getItem('currentKey') < 5}
         >
           Generate Speaking Report
+          {isLoadingReport ? <FontAwesomeIcon icon={faSpinner} spin className="mx-2" /> : <></>}
         </button>
       </div>
       {showPopup && (
