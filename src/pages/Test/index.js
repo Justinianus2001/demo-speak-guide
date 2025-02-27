@@ -245,6 +245,8 @@ function Test() {
       pauseAudio: 'Pause Audio',
       analyzeAndEvaluate: 'Analyze and Evaluate',
       generateReport: 'Generate Speaking Report',
+      analyzing: 'Analyzing...',
+      generatingReport: 'Generating report...',
       averagePoint: 'Your average point:',
       speakingreport: 'Speaking Report:',
       overallAssessment: 'Overall Assessment:',
@@ -270,6 +272,8 @@ function Test() {
       pauseAudio: 'Tạm dừng',
       analyzeAndEvaluate: 'Đánh giá và phân tích',
       generateReport: 'Tạo báo cáo phát âm',
+      analyzing: 'Đang phân tích...',
+      generatingReport: 'Đang tạo báo cáo...',
       averagePoint: 'Điểm trung bình của bạn:',
       speakingreport: 'Báo cáo phát âm:',
       overallAssessment: 'Đánh giá tổng thể:',
@@ -350,10 +354,12 @@ function Test() {
           </>
         )}
       </div>
+      {isLoadingAnalyze && <p className="mt-4">{textContent[language].analyzing}</p>}
+      {isLoadingReport && <p className="mt-4">{textContent[language].generatingReport}</p>}
       {(isLoadingAnalyze || isLoadingReport) && (
         <div className="w-80 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
           <div
-            className="bg-blue-600 h-2.5 rounded-full"
+            className="bg-gradient-to-r from-blue-400 to-blue-700 h-2.5 rounded-full"
             style={{ width: `${progress}%`, transition: 'width 0.5s' }}
           ></div>
         </div>
