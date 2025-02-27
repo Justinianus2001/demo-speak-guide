@@ -91,8 +91,8 @@ function Test() {
       formData.append('audio', audioFile);
 
       const progressInterval = setInterval(() => {
-        setProgress((prev) => (prev < 100 ? prev + 10 : 100));
-      }, 500);
+        setProgress((prev) => (prev < 100 ? prev + 5 : 100));
+      }, 1000);
 
       try {
         const [pronunciationResponse, metricsResponse] = await Promise.all([
@@ -167,8 +167,8 @@ function Test() {
       formData.append('text', JSON.stringify(combinedData));
 
       const progressInterval = setInterval(() => {
-        setProgress((prev) => (prev < 100 ? prev + 10 : 100));
-      }, 500);
+        setProgress((prev) => (prev < 100 ? prev + 5 : 100));
+      }, 1000);
 
       try {
         const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
@@ -315,7 +315,7 @@ function Test() {
           width="150"
         />
       </div>
-      <div className="mt-6">
+      <div className="mt-6 px-4">
         <b>
           <p>{currentText}</p>
           {pronunciationResponse && (
@@ -332,20 +332,30 @@ function Test() {
           )}
         </b>
       </div>
-      {metricsResponse && (
-        <div className="mt-4">
-          <p className="text-lg font-semibold text-center my-1">{textContent[language].averagePoint}</p>
-          <h1 className="text-4xl font-semibold text-center my-1">
-            <strong>
-              {localStorage.getItem('listScore')
-                ? Math.round(
-                    (JSON.parse(localStorage.getItem('listScore')).reduce((a, b) => a + b, 0) /
-                      JSON.parse(localStorage.getItem('listScore')).length) *
-                      100,
-                  ) / 100
-                : 0}
-            </strong>
-          </h1>
+      <div className="mt-4">
+        {metricsResponse && !isLoadingAnalyze && !isLoadingReport && (
+          <>
+            <p className="text-lg font-semibold text-center my-1">{textContent[language].averagePoint}</p>
+            <h1 className="text-4xl font-semibold text-center my-1">
+              <strong>
+                {localStorage.getItem('listScore')
+                  ? Math.round(
+                      (JSON.parse(localStorage.getItem('listScore')).reduce((a, b) => a + b, 0) /
+                        JSON.parse(localStorage.getItem('listScore')).length) *
+                        100,
+                    ) / 100
+                  : 0}
+              </strong>
+            </h1>
+          </>
+        )}
+      </div>
+      {(isLoadingAnalyze || isLoadingReport) && (
+        <div className="w-80 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
+          <div
+            className="bg-blue-600 h-2.5 rounded-full"
+            style={{ width: `${progress}%`, transition: 'width 0.5s' }}
+          ></div>
         </div>
       )}
       <div className="mt-8 flex">
@@ -397,14 +407,6 @@ function Test() {
           disabled={!audioFile}
         >
           {textContent[language].analyzeAndEvaluate}
-          {isLoadingAnalyze && (
-            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full"
-                style={{ width: `${progress}%`, transition: 'width 0.5s' }}
-              ></div>
-            </div>
-          )}
         </button>
       </div>
       <div className="mt-4">
@@ -416,14 +418,6 @@ function Test() {
           disabled={localStorage.getItem('currentKey') < 1}
         >
           {textContent[language].generateReport}
-          {isLoadingReport && (
-            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
-              <div
-                className="bg-red-600 h-2.5 rounded-full"
-                style={{ width: `${progress}%`, transition: 'width 0.5s' }}
-              ></div>
-            </div>
-          )}
         </button>
       </div>
       {showPopup && (
@@ -481,7 +475,7 @@ function Test() {
         </div>
       )}
       {reportResponse && (
-        <div className="mt-8">
+        <div className="mt-8 px-4">
           <h2 className="text-lg font-semibold my-1">{textContent[language].speakingreport}</h2>
           <p>
             <strong>{textContent[language].overallAssessment}</strong> {reportResponse.data.overall_assessment}
