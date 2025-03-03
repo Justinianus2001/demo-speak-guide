@@ -11,7 +11,7 @@ function Test() {
   const [currentText, setCurrentText] = useState('');
   const [pronunciationResponse, setPronunciationResponse] = useState(null);
   const [metricsResponse, setMetricsResponse] = useState(null);
-  const [reportResponse, setReportResponse] = useState(null);
+  // const [reportResponse, setReportResponse] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoadingAnalyze, setIsLoadingAnalyze] = useState(false);
@@ -48,6 +48,12 @@ function Test() {
   useEffect(() => {
     setCurrentText(texts[Math.floor(Math.random() * texts.length)]);
   }, [texts]);
+
+  const getColorForScore = (score) => {
+    const red = Math.min(255, Math.max(0, 255 - score * 2.55));
+    const green = Math.min(255, Math.max(0, score * 2.55));
+    return `rgb(${red}, ${green}, 0)`;
+  };
 
   const handleRecord = async () => {
     if (!isRecording) {
@@ -139,57 +145,57 @@ function Test() {
     }
   };
 
-  const handleGenerateReport = async () => {
-    const pronunciationData = [];
-    const metricsData = [];
+  // const handleGenerateReport = async () => {
+  //   const pronunciationData = [];
+  //   const metricsData = [];
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+  //   for (let i = 0; i < localStorage.length; i++) {
+  //     const key = localStorage.key(i);
 
-      if (key.startsWith('pronunciationResponse_')) {
-        const data = JSON.parse(localStorage.getItem(key));
-        pronunciationData.push(data);
-      } else if (key.startsWith('metricsResponse_')) {
-        const data = JSON.parse(localStorage.getItem(key));
-        metricsData.push(data);
-      }
-    }
+  //     if (key.startsWith('pronunciationResponse_')) {
+  //       const data = JSON.parse(localStorage.getItem(key));
+  //       pronunciationData.push(data);
+  //     } else if (key.startsWith('metricsResponse_')) {
+  //       const data = JSON.parse(localStorage.getItem(key));
+  //       metricsData.push(data);
+  //     }
+  //   }
 
-    if (localStorage.getItem('currentKey') > 0) {
-      setIsLoadingReport(true);
-      setProgress(0);
-      const combinedData = {
-        pronunciationData,
-        metricsData,
-      };
+  //   if (localStorage.getItem('currentKey') > 0) {
+  //     setIsLoadingReport(true);
+  //     setProgress(0);
+  //     const combinedData = {
+  //       pronunciationData,
+  //       metricsData,
+  //     };
 
-      const formData = new FormData();
-      formData.append('text', JSON.stringify(combinedData));
+  //     const formData = new FormData();
+  //     formData.append('text', JSON.stringify(combinedData));
 
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => (prev < 100 ? prev + 5 : 100));
-      }, 1000);
+  //     const progressInterval = setInterval(() => {
+  //       setProgress((prev) => (prev < 100 ? prev + 5 : 100));
+  //     }, 1000);
 
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
-          method: 'POST',
-          body: formData,
-        });
+  //     try {
+  //       const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
+  //         method: 'POST',
+  //         body: formData,
+  //       });
 
-        const data = await response.json();
-        setReportResponse(data);
-      } catch (error) {
-        console.error('Error generating report:', error);
-      } finally {
-        clearInterval(progressInterval);
-        setProgress(100);
-        setTimeout(() => {
-          setIsLoadingReport(false);
-          setProgress(0);
-        }, 500);
-      }
-    }
-  };
+  //       const data = await response.json();
+  //       setReportResponse(data);
+  //     } catch (error) {
+  //       console.error('Error generating report:', error);
+  //     } finally {
+  //       clearInterval(progressInterval);
+  //       setProgress(100);
+  //       setTimeout(() => {
+  //         setIsLoadingReport(false);
+  //         setProgress(0);
+  //       }, 500);
+  //     }
+  //   }
+  // };
 
   const handleReplay = () => {
     if (audioFile) {
@@ -325,13 +331,13 @@ function Test() {
           {pronunciationResponse && (
             <div className="flex items-center">
               <div dangerouslySetInnerHTML={{ __html: pronunciationResponse.data.html_output }} />
-              <button
+              {/* <button
                 onClick={openPopup}
                 className="bg-gradient-to-r from-blue-400 to-green-500 text-white font-semibold w-6 h-6 mx-1 rounded-full text-lg flex items-center justify-center"
                 disabled={!pronunciationResponse || !metricsResponse}
               >
                 !
-              </button>
+              </button> */}
             </div>
           )}
         </b>
@@ -340,17 +346,20 @@ function Test() {
         {metricsResponse && !isLoadingAnalyze && !isLoadingReport && (
           <>
             <p className="text-lg font-semibold text-center my-1">{textContent[language].averagePoint}</p>
-            <h1 className="text-4xl font-semibold text-center my-1">
-              <strong>
-                {localStorage.getItem('listScore')
-                  ? Math.round(
-                      (JSON.parse(localStorage.getItem('listScore')).reduce((a, b) => a + b, 0) /
-                        JSON.parse(localStorage.getItem('listScore')).length) *
-                        100,
-                    ) / 100
-                  : 0}
-              </strong>
-            </h1>
+            {(() => {
+              const listScore = JSON.parse(localStorage.getItem('listScore') || '[]');
+              const averageScore = listScore.length
+                ? Math.round((listScore.reduce((a, b) => a + b, 0) / listScore.length) * 100) / 100
+                : 0;
+              return (
+                <h1
+                  className="text-4xl font-semibold text-center my-1"
+                  style={{ color: getColorForScore(averageScore) }}
+                >
+                  <strong>{averageScore}</strong>
+                </h1>
+              );
+            })()}
           </>
         )}
       </div>
@@ -417,11 +426,12 @@ function Test() {
       </div>
       <div className="mt-4">
         <button
-          onClick={handleGenerateReport}
-          className={`bg-gradient-to-r from-red-400 to-orange-500 text-white font-semibold py-2 px-12 rounded-full text-lg ${
-            localStorage.getItem('currentKey') < 1 ? 'disabled' : ''
-          }`}
-          disabled={localStorage.getItem('currentKey') < 1}
+          onClick={openPopup}
+          className={
+            'bg-gradient-to-r from-red-400 to-orange-500 text-white font-semibold py-2 px-12 rounded-full text-lg'
+          }
+          // ${localStorage.getItem('currentKey') < 1 ? 'disabled' : ''}
+          // disabled={localStorage.getItem('currentKey') < 1}
         >
           {textContent[language].generateReport}
         </button>
@@ -430,6 +440,7 @@ function Test() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white text-black p-8 rounded-lg max-w-2xl w-full max-h-full overflow-y-auto">
             <h2 className="text-lg font-semibold">{textContent[language].analysisResults}</h2>
+            <div dangerouslySetInnerHTML={{ __html: pronunciationResponse.data.html_output }} />
             {pronunciationResponse && (
               <div className="mt-4">
                 <h3 className="text-md font-semibold">{textContent[language].pronunciationErrors}</h3>
@@ -480,7 +491,7 @@ function Test() {
           </div>
         </div>
       )}
-      {reportResponse && (
+      {/* {reportResponse && (
         <div className="mt-8 px-4">
           <h2 className="text-lg font-semibold my-1">{textContent[language].speakingreport}</h2>
           <p>
@@ -503,7 +514,7 @@ function Test() {
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
