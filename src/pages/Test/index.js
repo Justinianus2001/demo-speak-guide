@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMicrophone, faStop, faPlay, faPause, faUpload, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
+import { faMicrophone, faStop, faPlay, faPause, faUpload, faSyncAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import coach from '~/images/coach.png';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import enFlag from '~/images/gb.svg';
@@ -11,11 +11,9 @@ function Test() {
   const [currentText, setCurrentText] = useState('');
   const [pronunciationResponse, setPronunciationResponse] = useState(null);
   const [metricsResponse, setMetricsResponse] = useState(null);
-  // const [reportResponse, setReportResponse] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoadingAnalyze, setIsLoadingAnalyze] = useState(false);
-  const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   const [progress, setProgress] = useState(0);
   const mediaRecorderRef = useRef(null);
@@ -50,8 +48,8 @@ function Test() {
   }, [texts]);
 
   const getColorForScore = (score) => {
-    const red = Math.min(255, Math.max(0, 255 - score * 2.55));
-    const green = Math.min(255, Math.max(0, score * 2.55));
+    const red = Math.min(255, Math.max(0, 255 - score * 25.5));
+    const green = Math.min(255, Math.max(0, score * 25.5));
     return `rgb(${red}, ${green}, 0)`;
   };
 
@@ -84,6 +82,13 @@ function Test() {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+
+      audioChunksRef.current = [];
+
       setAudioFile(file);
     }
   };
@@ -144,58 +149,6 @@ function Test() {
       }
     }
   };
-
-  // const handleGenerateReport = async () => {
-  //   const pronunciationData = [];
-  //   const metricsData = [];
-
-  //   for (let i = 0; i < localStorage.length; i++) {
-  //     const key = localStorage.key(i);
-
-  //     if (key.startsWith('pronunciationResponse_')) {
-  //       const data = JSON.parse(localStorage.getItem(key));
-  //       pronunciationData.push(data);
-  //     } else if (key.startsWith('metricsResponse_')) {
-  //       const data = JSON.parse(localStorage.getItem(key));
-  //       metricsData.push(data);
-  //     }
-  //   }
-
-  //   if (localStorage.getItem('currentKey') > 0) {
-  //     setIsLoadingReport(true);
-  //     setProgress(0);
-  //     const combinedData = {
-  //       pronunciationData,
-  //       metricsData,
-  //     };
-
-  //     const formData = new FormData();
-  //     formData.append('text', JSON.stringify(combinedData));
-
-  //     const progressInterval = setInterval(() => {
-  //       setProgress((prev) => (prev < 100 ? prev + 5 : 100));
-  //     }, 1000);
-
-  //     try {
-  //       const response = await fetch(`${process.env.REACT_APP_API_DOMAIN}/api/v1/generate-speaking-report`, {
-  //         method: 'POST',
-  //         body: formData,
-  //       });
-
-  //       const data = await response.json();
-  //       setReportResponse(data);
-  //     } catch (error) {
-  //       console.error('Error generating report:', error);
-  //     } finally {
-  //       clearInterval(progressInterval);
-  //       setProgress(100);
-  //       setTimeout(() => {
-  //         setIsLoadingReport(false);
-  //         setProgress(0);
-  //       }, 500);
-  //     }
-  //   }
-  // };
 
   const handleReplay = () => {
     if (audioFile) {
@@ -265,7 +218,7 @@ function Test() {
       correctPronunciation: 'Correct Pronunciation:',
       explanation: 'Explanation:',
       speechMetrics: 'Speech Metrics:',
-      notes: 'Notes:',
+      feedback: 'Feedback:',
       close: 'Close',
     },
     vn: {
@@ -292,7 +245,7 @@ function Test() {
       correctPronunciation: 'Phát âm đúng:',
       explanation: 'Giải thích:',
       speechMetrics: 'Chỉ số giọng nói:',
-      notes: 'Ghi chú:',
+      feedback: 'Góp ý:',
       close: 'Đóng',
     },
   };
@@ -331,25 +284,18 @@ function Test() {
           {pronunciationResponse && (
             <div className="flex items-center">
               <div dangerouslySetInnerHTML={{ __html: pronunciationResponse.data.html_output }} />
-              {/* <button
-                onClick={openPopup}
-                className="bg-gradient-to-r from-blue-400 to-green-500 text-white font-semibold w-6 h-6 mx-1 rounded-full text-lg flex items-center justify-center"
-                disabled={!pronunciationResponse || !metricsResponse}
-              >
-                !
-              </button> */}
             </div>
           )}
         </b>
       </div>
       <div className="mt-4">
-        {metricsResponse && !isLoadingAnalyze && !isLoadingReport && (
+        {metricsResponse && !isLoadingAnalyze && (
           <>
             <p className="text-lg font-semibold text-center my-1">{textContent[language].averagePoint}</p>
             {(() => {
               const listScore = JSON.parse(localStorage.getItem('listScore') || '[]');
               const averageScore = listScore.length
-                ? Math.round((listScore.reduce((a, b) => a + b, 0) / listScore.length) * 100) / 100
+                ? Math.round((listScore.reduce((a, b) => a + b, 0) / listScore.length) * 10) / 10
                 : 0;
               return (
                 <h1
@@ -364,8 +310,7 @@ function Test() {
         )}
       </div>
       {isLoadingAnalyze && <p className="mt-4">{textContent[language].analyzing}</p>}
-      {isLoadingReport && <p className="mt-4">{textContent[language].generatingReport}</p>}
-      {(isLoadingAnalyze || isLoadingReport) && (
+      {isLoadingAnalyze && (
         <div className="w-80 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2">
           <div
             className="bg-gradient-to-r from-blue-400 to-blue-700 h-2.5 rounded-full"
@@ -430,15 +375,23 @@ function Test() {
           className={
             'bg-gradient-to-r from-red-400 to-orange-500 text-white font-semibold py-2 px-12 rounded-full text-lg'
           }
-          // ${localStorage.getItem('currentKey') < 1 ? 'disabled' : ''}
-          // disabled={localStorage.getItem('currentKey') < 1}
         >
           {textContent[language].generateReport}
         </button>
       </div>
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white text-black p-8 rounded-lg max-w-2xl w-full max-h-full overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" onClick={closePopup}>
+          <div
+            className="bg-white text-black p-8 rounded-lg max-w-2xl w-full max-h-full overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closePopup}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <FontAwesomeIcon icon={faTimes} size="lg" />
+            </button>
             <h2 className="text-lg font-semibold">{textContent[language].analysisResults}</h2>
             <div dangerouslySetInnerHTML={{ __html: pronunciationResponse.data.html_output }} />
             {pronunciationResponse && (
@@ -471,50 +424,27 @@ function Test() {
                   {Object.keys(metricsResponse.data.measures).map((key) => (
                     <li key={key}>
                       <p>
-                        - <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{' '}
+                        -{' '}
+                        <strong>
+                          {key
+                            .split('_')
+                            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ')}
+                          :
+                        </strong>{' '}
                         {metricsResponse.data.measures[key].score}
                       </p>
                       <p>
-                        <strong>{textContent[language].notes}</strong> {metricsResponse.data.measures[key].notes}
+                        <strong>{textContent[language].feedback}</strong> {metricsResponse.data.measures[key].feedback}
                       </p>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
-            <button
-              onClick={closePopup}
-              className="bg-gradient-to-r from-red-400 to-pink-500 text-white font-semibold py-2 px-12 mt-4 rounded-full text-lg"
-            >
-              {textContent[language].close}
-            </button>
           </div>
         </div>
       )}
-      {/* {reportResponse && (
-        <div className="mt-8 px-4">
-          <h2 className="text-lg font-semibold my-1">{textContent[language].speakingreport}</h2>
-          <p>
-            <strong>{textContent[language].overallAssessment}</strong> {reportResponse.data.overall_assessment}
-          </p>
-          <h3 className="text-md font-semibold my-1">{textContent[language].commonErrors}</h3>
-          <ul>
-            {reportResponse.data.common_errors.map((error, index) => (
-              <li key={index} className="my-1">
-                {error}
-              </li>
-            ))}
-          </ul>
-          <h3 className="text-md font-semibold my-1">{textContent[language].improvementSuggestions}</h3>
-          <ul>
-            {reportResponse.data.improvement_suggestions.map((suggestion, index) => (
-              <li key={index} className="my-1">
-                {suggestion}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )} */}
     </div>
   );
 }
